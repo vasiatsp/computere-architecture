@@ -1,0 +1,59 @@
+.data
+ # No static data is required since everything is passed as arguments.           
+arr_x: .word  20,5, 40
+arr_y: .word  10,2, 35
+
+summsg: .asciiz "sum= "
+min1msg: .asciiz "  mimn = "
+ 
+ .text
+main:
+   addi $sp, $sp,-12 # stack for 2 elements
+sw $ra, 8($sp) #save return addy 
+ sw $s1, 4($sp) # save s1
+ sw $s0, 0($sp) # save s0
+ la $a0, arr_x # initioanlize pointer else it doemst work ====
+ la $a1, arr_y#====
+ li $s0, 4 #=====
+lw $t1, 0($a0) # min1 = x[0]
+lw $s1, 0($a1) # min2= y[0]
+ add $t3, $t3, 0 # i = 0 
+subi $a2, $s0, 1 # a2 = n -1
+LOOP: slt $t4, $t3, $a2 # t4 = i> n -1 opou n-1 = a2 --- elenxoqw vrnxoy 
+      bne $t4, $zero, END # t4 i - 1
+addi $a0, $a0, 4 # x ++  by 4 cuz each word i 4 bits
+addi $a1, $a1, 4 # Y ++ // y = y +1y
+ lw $t6, 0($a0) # t6 = x[i]
+ lw $t7, 0($a1)
+slt $t4, $t6, $t1  # Check if x[i] < min1
+bne $t4, $zero, CHECK2  # If true, go to CHECK2
+add $t1, $t6, $zero # updates min1 = *x
+#j CHECK2
+CHECK2: slt $t4,$t7,$s1 # y>min2
+bne $t4, $zero,NEXT
+add $s1, $t7, $zero
+#j NEXT
+NEXT: addi $t3, $t3, 1 #i++ 
+ j LOOP # jana to loop 
+END: add $t5, $t1, $s1
+
+# Debug print for min1
+li $v0, 4
+la $a0, min1msg
+syscall
+li $v0, 1
+move $a0, $t1
+syscall
+
+ # Print sum
+    li $v0, 4                # Syscall to print string
+   la $a0, summsg           # Load address of sum message
+    syscall
+    li $v0, 1                # Syscall to print integer
+    move $a0, $t5            # Move sum to $a0
+    syscall
+ lw $s0, 0($sp) # return from j : epanafora toy n 
+ lw $s1, 4($sp) # epanafora dieythinshw 
+ lw $ra, 8($sp)
+ addi $sp, $sp,12 # egajogh stack 
+ jr $ra # EPISTROFH TSON CALLER 	
