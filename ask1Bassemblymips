@@ -1,33 +1,44 @@
 .data
+AddrConstant5381: .word 5381   # Store the constant 5381 in memory
+result_msg: .asciiz "Hash result: "  # Message for output
 
 .text
 main:
+    li $t0, 7    # Initialize input value to 3 (you can change this value to test)
+    jal fun                 # Call the hash function
 
- jal fun #emsures ra is correctely set 
- 
- fun:  
- addi $sp, $sp -12 # stack for 3 items
- sw $ra, 8($sp) #save addy
- sw $a0, 4($sp) #save imput 
- sw $a1, 0($sp) #save c 
- 
- li $s0, 5381 # s0 = hash = 5381
- 
- LOOP: 
- beq $a0, $zero, END #go to END if a0(imput) = 0 
- andi $a1, $a0, 0xFF #t2 = updated c 
- sll $a1,$s0, 4 #t3 = left shift hash by 4 bits
- add $t4, $a1, $s0 
- add $t5, $t4, $a1 #new hash 
- srl $a0, $a0, 8 # update a0 = right shift c by 8 bits
- add $s0, $zero, $t5  #update hash
- j LOOP  
- 
- END:move $v0, $s0 # $v0 return value
+    # Print the result after the function returns
+    li $v0, 4               # Syscall: print string
+    la $a0, result_msg      # Load address of result message
+    syscall
 
- lw $a1, 0($sp)
- lw $a0, 4($sp)
- lw $ra, 8($sp)
- addi $sp, $sp 12 
- jr $ra # return to caller 
+    li $v0, 1               # Syscall: print integer
+    move $a0, $t5          # Move result (hash) from $t1 to $a0 for printing
+    syscall
+
+    li $v0, 10              # Syscall: exit
+    syscall
+
+fun:  
+    addi $sp, $sp, -8       # Stack space for $ra and $t0
+    sw $ra, 4($sp)          # Save return address
+    sw $t0, 0($sp)          # Save input ($t0)
+ 
+    lw $t1, AddrConstant5381 # $t1 = hash = 5381
+ 
+LOOP: 
+    beq $t0, $zero, END     # Exit loop if input ($t0) == 0
+    andi $t2, $t0, 0xFF     # $t2 = c = input & 0xFF
+    sll $t3, $t1, 4         # $t3 = hash << 4
+    add $t4, $t3, $t1       # $t4 = (hash << 4) + hash
+    add $t5, $t4, $t2       # $t1 = ((hash << 4) + hash) + c
+    srl $t0, $t0, 8         # Update input ($t0) = input >> 8
+    j LOOP                  # Repeat the loop
+
+END: 
+    move $v0, $t5           # Move final hash to $v0 (return value)
+    lw $t0, 0($sp)          # Restore input ($t0)
+    lw $ra, 4($sp)          # Restore return address
+    addi $sp, $sp, 8        # Restore stack
+    jr $ra                  # Return to caller
  
