@@ -1,0 +1,136 @@
+.data
+ heap: .space 1024 
+ heap_prt: .word 0 
+ data: .word 0 #hold the allocated pointer 
+ 
+.text 
+main: 
+
+#malloc set up 
+li $a0, 32 #space for 32 bytes
+li $a1, 60 
+jal malloc 
+sw $v0, data #store teh returned pointer in data
+move $s0, $v0 #store allocated point in s0
+
+malloc:
+li $t4, 1024
+la $t1, heap #base address of the heap
+lw $t2, heap_prt # load curr heap pointer
+add $t3, $t1, $t2 #calulate free address 
+add $t2, $t2, $a0 #t2 holds curr pointer (heap_ptr)
+		  # a0 is the num of bytes wanted for the allocation 
+		  # we give the wanted size to t2 and we get a new heap_ptr
+slt $t3, $t2, $t4 # check if new nead_prt(t2) < 1024 
+sw $t2, heap_prt #update heap prt
+move $v0, $t3 #return allocated memory
+beq $t3, $zero, END
+jr $ra 
+
+# data[0] = ('6' << 16) | ('3' << 8) | '6'
+li $t1, 54             # '6'
+li $t2, 51             # '3'
+li $t3, 54             # '6'
+sll $t1, $t1, 16       # ('6' << 16)
+sll $t2, $t2, 8        # ('3' << 8)
+or $t1, $t1, $t2       # ('6' << 16) | ('3' << 8)
+or $t1, $t1, $t3       # ('6' << 16) | ('3' << 8) | '6'
+sw $t1, 0($t0)         # Store the result into data[0]
+
+# data[1] = ('N' << 24) | ('T' << 16) | ('U' << 8) | 'A'
+li $t1, 78             # 'N'
+li $t2, 84             # 'T'
+li $t3, 85             # 'U'
+li $t4, 65             # 'A'
+sll $t1, $t1, 24       # ('N' << 24)
+sll $t2, $t2, 16       # ('T' << 16)
+sll $t3, $t3, 8        # ('U' << 8)
+or $t1, $t1, $t2       # ('N' << 24) | ('T' << 16)
+or $t1, $t1, $t3       # ('N' << 24) | ('T' << 16) | ('U' << 8)
+or $t1, $t1, $t4       # ('N' << 24) | ('T' << 16) | ('U' << 8) | 'A'
+sw $t1, 4($t0)         # Store the result into data[1]
+
+# data[2] = ('E' << 16) | ('C' << 8) | 'E'
+li $t1, 69             # 'E'
+li $t2, 67             # 'C'
+sll $t1, $t1, 16       # ('E' << 16)
+sll $t2, $t2, 8        # ('C' << 8)
+or $t1, $t1, $t2       # ('E' << 16) | ('C' << 8)
+or $t1, $t1, 69        # ('E' << 16) | ('C' << 8) | 'E'
+sw $t1, 8($t0)         # Store the result into data[2]
+
+# data[3] = ('C' << 8) | 'A'
+li $t1, 67             # 'C'
+li $t2, 65             # 'A'
+sll $t1, $t1, 8        # ('C' << 8)
+or $t1, $t1, $t2       # ('C' << 8) | 'A'
+sw $t1, 12($t0)        # Store the result into data[3]
+
+# data[4] = ('2' << 24) | ('0' << 16) | ('2' << 8) | '4'
+li $t1, 50             # '2'
+li $t2, 48             # '0'
+li $t3, 50             # '2'
+li $t4, 52             # '4'
+sll $t1, $t1, 24       # ('2' << 24)
+sll $t2, $t2, 16       # ('0' << 16)
+sll $t3, $t3, 8        # ('2' << 8)
+or $t1, $t1, $t2       # ('2' << 24) | ('0' << 16)
+or $t1, $t1, $t3       # ('2' << 24) | ('0' << 16) | ('2' << 8)
+or $t1, $t1, $t4       # ('2' << 24) | ('0' << 16) | ('2' << 8) | '4'
+sw $t1, 16($t0)        # Store the result into data[4]
+
+# data[5] = ('1' << 24) | ('2' << 16) | ('1' << 8) | '0'
+li $t1, 49             # '1'
+li $t2, 50             # '2'
+li $t3, 49             # '1'
+li $t4, 48             # '0'
+sll $t1, $t1, 24       # ('1' << 24)
+sll $t2, $t2, 16       # ('2' << 16)
+sll $t3, $t3, 8        # ('1' << 8)
+or $t1, $t1, $t2       # ('1' << 24) | ('2' << 16)
+or $t1, $t1, $t3       # ('1' << 24) | ('2' << 16) | ('1' << 8)
+or $t1, $t1, $t4       # ('1' << 24) | ('2' << 16) | ('1' << 8) | '0'
+sw $t1, 20($t0)        # Store the result into data[5]
+
+ # data[6] = ('2' << 16) | ('0' << 8) | '4'
+li $t1, 50             # '2'
+li $t2, 48             # '0'
+li $t3, 52             # '4'
+sll $t1, $t1, 16       # ('2' << 16)
+sll $t2, $t2, 8        # ('0' << 8)
+or $t1, $t1, $t2       # ('2' << 16) | ('0' << 8)
+or $t1, $t1, $t3       # ('2' << 16) | ('0' << 8) | '4'
+sw $t1, 24($t0)        # Store the result into data[6]
+
+ # data[7] = ('M' << 24) | ('I' << 16) | ('P' << 8) | 'S'
+li $t1, 77             # 'M'
+li $t2, 73             # 'I'
+li $t3, 80             # 'P'
+li $t4, 83             # 'S'
+sll $t1, $t1, 24       # ('M' << 24)
+sll $t2, $t2, 16       # ('I' << 16)
+sll $t3, $t3, 8        # ('P' << 8)
+or $t1, $t1, $t2       # ('M' << 24) | ('I' << 16)
+or $t1, $t1, $t3       # ('M' << 24) | ('I' << 16) | ('P' << 8)
+or $t1, $t1, $t4       # ('M' << 24) | ('I' << 16) | ('P' << 8) | 'S'
+sw $t1, 28($t0)        # Store the result into data[7]
+   
+#create leaves
+la $a1, data
+li $a2, 8 # 8 leaves
+move $a2, $s0 #pass tree ponter as a0
+jal create_leaves
+
+#create merkle treee 
+move $a0, $s0 #pas tree pointer as a0
+li $a1, 8 # 8 leaves
+jal create_Merkle_Tree
+move $t0, $v0 #moce root into t0
+
+END:
+jr $ra   
+    
+
+    
+    
+
