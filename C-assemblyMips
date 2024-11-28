@@ -1,86 +1,31 @@
-.data 
+.data
 AddrConstant5381: .word 5381   # Store the constant 5381 in memory
-.text 
- main : 
-  jal create_leaves
- cslab_hash:
- 
- create_leaves:
- addi $sp $sp -16
- sw $ra, 12($sp) #save addy
- sw $t0, 8($sp) # t0 = data_array
- sw $t1, 4($sp) #t1 = array_size
- sw $t2, 0($sp) #t2 = tree 
- 
- addi $t3, $t3, 0 # i = 0
- 
- LOOP1:
- slt $t4, $t3, $t1 #check if i(t3)<array_size(t1) if true t4 = 1 else t4=0 
- beq $t4, $zero, END1 #if the above statement if false  (0) go to END
- lw $t5, 0($t0) #load pointed by t0 into t5
- move $t0, $t5  # Move the value to $t0 (cslab_hash's input)
- jal cslab_hash #hash is now v0
- sw $v0, 0($t2) #stove the vale v0 into the addresss pointed by the tree t2 
- addi $t0, $t0, 4 #data_array++
- addi $t2, $t2, 4 #tree++
- addi $t3, $t3, 1 #i++
- 
- j LOOP1 
- 
- END1: 
- lw $t2, 0($sp)
- lw $t1, 4($sp)
- lw $t0, 8($sp)
- lw $ra 12($sp)
- addi $sp $sp 16 
- jr $ra #returns caller 
- 
- create_Merkle_Tree: 
- addi $sp, $sp, -12
- sw $ra, 8($sp)
- sw $t0, 4($sp) # t0 = tree
- sw $t1, 0($sp) # t1 = num_of_leaves
- 
- div $t3, $t1, 2 # level_ops(t3) = t1/2 
- move $t2, $zero #i=0
- 
- LOOP2: 
- slt $t4, $zero, $t3 #check if level_ops(t3) > 0 if true t4 = 1 else t4 = 0
- beq $t4, $zero, END2 #if teh statement above is true go to END2
- move $t5,  $zero # j = 0 
- j LOOP2
- 
-LOOP3: 
- slt $t6, $t5, $t3         # Check if j < level_ops
- beq $t6, $zero,END3 
+data_array: .word 3, 4, 5, 6
+array_size: .word 4
+tree: .space 16 
+.text
+main: 
 
-  mul $t7, $t2, 4           # Offset for tree[i]
-  add $t8, $t0, $t7         # Address of tree[i]
-  lw $t9, 0($t8)            # Load tree[i]
+create_leaves: 
 
-  addi $t8, $t8, 4          # Address of tree[i+1]
-  lw $s0, 0($t8)            # Load tree[i+1]
+la $a0, data_array
+la $a1, array_size
+la $a2, tree
+move $t1, $zero
 
-  xor $t9, $t9, $s0         # xored_val = tree[i] ^ tree[i+1]
-  move $a0, $t9             # Input for cslab_hash
-  jal cslab_hash            # Call hash function (result in $v0)
 
-    
-  add $a0, $t0, $t7        # Address for storing result
-  sw $v0, 0($a0)           # Store hashed result
+LOOP:
+slt $t2, $t1, $a0 
+beq $t2, $zero, END
+jal cslab_hash
+sw $a3, 0($a2)
+addi $a0, $a0, 4
+addi $a2, $a2, 4
+addi $t1, $t1, 1
+move $a3, $v0
+move $a0, $a3
+li $v0, 1
+syscall
+j LOOP 
 
-  addi $t2, $t2, 2          # Increment i by 2 (process next pair)
-  addi $t5, $t5, 1          # Increment j
-  j LOOP3                   # Repeat inner loop
-    
-  END3: 
-  div $t3, $t3, 2
-  j END3
-  END2:
- lw $v0, -4($t6)  # Load value from tail-1 (one step back)
- lw $t1, 0($sp)         
- lw $t0, 4($sp)         
- lw $ra, 8($sp)  
- addi $sp, $sp, 12  
- jr $ra  
-  
+END: 
