@@ -1,97 +1,123 @@
 .data
-AddrConstant5381: .word 5381   # Store the constant 5381 in memory
-data_array: .word 3, 4, 5, 6
-array_size: .word 4
-tree: .space 16 
-.text
+ heap: .space 1024 
+ heap_prt: .word 0 
+ data: .word 0 #hold the allocated pointer 
+ 
+.text 
 main: 
 
-la $a0, data_array
-la $a1, array_size
-la $a2, tree
+#malloc set up 
+li $a0, 32 #space for 32 bytes 
+jal malloc 
+sw $v0, data #store teh returned pointer in data
+move $s0, $v0 #store allocated point in s0
 
-create_leaves:
-move $t0, $zero #i = 0 
+malloc:
+li $t4, 1024
+la $t1, heap #base address of the heap
+lw $t2, heap_prt # load curr heap pointer
+add $t3, $t1, $t2 #calulate free address 
+add $t2, $t2, $a0 #t2 holds curr pointer (heap_ptr)
+		  # a0 is the num of bytes wanted for the allocation 
+		  # we give the wanted size to t2 and we get a new heap_ptr
+slt $t3, $t2, $t4 # check if new nead_prt(t2) < 1024 
+sw $t2, heap_prt #update heap prt
+move $v0, $t3 #return allocated memory
+beq $t3, $zero, END
+jr $ra 
 
-LOOP1:
-slt $t1, $t0, $a1 # set t1=1 if t0<a1 else t1=0
-beq $t1, $zero, END1# go to end if t1=0
-sll $t2, $t0, 2 # t2=i*4 // address_offset 
-add $t2, $t2, $a0 #t2 = address of data_array[i]
-lw $t3, 0($t2) # temporary register t3 = data_array[i] 
-li $v0, 1
-move $a0, $t3
-syscall
-jal cslab_hash
-sw $t6, 0($a2) #store hash value in a2 -tree 
-addi $a0, $a0, 4 #data_array++
-addi $a2, $a2, 4 #tree++
-addi $t0, $t0, 1 #i++
-j LOOP1
- END1:
- jr $ra
+# data[0]'
+li $t1, 54              # '6'
+li $t2, 51              # '3'
+li $t3, 54              # '6'
+jal string_to_int          # Encode '636' into integer
+sw $t1, 0($s0)          # Store result at data[0]
 
-create_Merkle_Tree: 
-move $t1, $a1
-div $t1, $t1, 1 #level_ops=num_od_leaves/2
-sll $t2, $a1, 2 #num_of_leaves *4
-add $t3, $a0, $t2  # tail = tree + (num_of_leaves * 4)
-move $t0, $zero #i =0
-            
-LOOP2:
-beq $t1, $zero END2
-move $t2, $zero #j= m0
+# data[1]
+li $t1, 78              # 'N'
+li $t2, 84              # 'T'
+li $t3, 85              # 'U'
+li $t4, 65              # 'A'
+jal string_to_int          # Encode 'NTUA' into integer
+sw $t1, 4($s0)          # Store result at data[1]
 
-LOOPJ:
-slt $t4, $t2, $t1
-beq $t4, ENDJ
-sll $t5, $t0, 2
+# data[2]
+li $t1, 69              # 'E'
+li $t2, 67              # 'C'
+li $t3, 69              # 'E'
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode 'ECE' into integer
+sw $t1, 8($s0)          # Store result at data[2]
 
-sll $t5, $t0, 2 #offset = i*4
-add $t5, $a0, $t5 #adress of tree
-lw $t6, 0($t5) #load tree[i] into t6
-lw $t7, 4($t5) #load tree[i+1] into t7
-xor $t8, $t6, $t7 #xor value
-
-move $a0, $t8
-jal cslab_hash
-move $t9, $v0
-sw $t9, 0($t3) # *tail=hash(xored val)
-addi $t3, $t3, 4
-addi $t0, $t0, 2 # i += 2
-addi $t2, $t2, 1 # j++
-j LOOPJ
-
-ENDJ: 
-srl $t1, $t1, 1            # level_ops = level_ops /2   
-move $t0, $zero
-
-END2: 
-sub $t3, $t3, 4 # move tail back to last hash
-lw $v0, 0($t3)  # return the value at *(tail - 1)
-jr $ra
+# data[3]
+li $t1, 67              # 'C'
+li $t2, 65              # 'A'
+li $t3, 0               # Empty (no third character)
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode 'CA' into integer
+sw $t1, 12($s0)         # Store result at data[3]
 
 
-cslab_hash:
-    lw $t9, AddrConstant5381       # Load constant 5381 into $t9 (hash)
- 
-LOOP:
-    beq $t3, $zero, END             # If input (t3) is 0, go to END
-    andi $t4, $t3, 0xFF            # c(t4) = input(t3) & 0xFF
-    sll $t5, $t9, 4                # t5 = left shift hash(t9) by 4 bits
-    add $t6, $t5, $t9              # hash = (hash << 4) + hash
-    add $t6, $t6, $t4              # hash = ((hash << 4) + hash) + c(t4)
-    srl $t3, $t3, 8                # update input (t3) by right shifting 8 bits
-    li $v0, 1           # Load syscall code for printing an integer
-    move $a0, $t6       # Move the hash result into $a0
-    syscall
-    move $t3, $zero
-    j LOOP                            # Repeat the loop
-  
+# data[4]
+li $t1, 50              # '2'
+li $t2, 48              # '0'
+li $t3, 50              # '2'
+li $t4, 52              # '4'
+jal string_to_int           # Encode '2024' into integer
+sw $t1, 16($s0)         # Store result at data[4]
+
+
+# data[5]
+li $t1, 49              # '1'
+li $t2, 50              # '2'
+li $t3, 49              # '1'
+li $t4, 48              # '0'
+jal string_to_int           # Encode '1210' into integer
+sw $t1, 20($s0)         # Store result at data[5]
+
+
+ # data[6]
+li $t1, 50              # '2'
+li $t2, 48              # '0'
+li $t3, 52              # '4'
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode '204' into integer
+sw $t1, 24($s0)         # Store result at data[6]
+
+
+ # data[7]
+li $t1, 77              # 'M'
+li $t2, 73              # 'I'
+li $t3, 80              # 'P'
+li $t4, 83              # 'S'
+jal string_to_int           # Encode 'MIPS' into integer
+sw $t1, 28($s0)         # Store result at data[7]
+
+#create leaves
+la $a1, data
+li $a2, 8 # 8 leaves
+move $a2, $s0 #pass tree ponter as a0
+jal create_leaves
+
+#create merkle treee 
+move $a0, $s0 #pas tree pointer as a0
+li $a1, 8 # 8 leaves
+jal create_Merkle_Tree
+move $t0, $v0 #moce root into t0
+
 END:
-    move $v0, $t6                  # Move the final hash result into $v0 to return it
-    jr $ra                         # Return to the caller
+jr $ra   
 
+string_to_int:
+sll $a0, $a0, 24        # Shift first char to the high byte
+sll $a1, $a1, 16        # Shift second char
+sll $a2, $a2, 8         # Shift third char
+or  $a0, $a0, $a1       # Combine chars into one integer
+or  $a0, $a0, $a2
+or  $a0, $a0, $a3       # Include the fourth char
+jr  $ra
+    
+    
 
     
     
