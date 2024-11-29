@@ -1,0 +1,89 @@
+.data
+AddrConstant5381: .word 5381   # Store the constant 5381 in memory
+data_array: .word 3, 4, 5, 6   # Array elements
+array_size: .word 4            # Array size
+newline: .asciiz "\n"          # Newline character
+tree: .space 16 
+.text
+main: 
+la $a0, data_array
+la $a1, tree 
+la $t1, array_size
+lw $t4, 0($t1)
+ create_leaves:
+
+move $t0, $zero #i = 0 
+
+loop:
+slt $t2,  $t0, $t4 # set t1=1 if t0<a1 else t1=0
+beq $t2, $zero, end# go to end if t1=0
+la $a0, data_array  
+sll $t3, $t0, 2 # t2=i*4 // address_offset 
+add $t3, $a0, $t3 #t2 = address of data_array[i]---base+(i*4)
+
+lw $t5, 0($t3)             # Load the value
+ # Print input_array[i]
+    li $v0, 1                      # Print integer syscall
+    move $a0, $t5                  # Move input_array[i] into $a0
+    syscall
+
+    # Print a newline
+    la $a0, newline                # Load address of newline character
+    li $v0, 4                      # syscall for print_string
+    syscall
+
+    # Call the hash function
+    move $t3, $t5
+jal cslab_hash
+la $a1, tree
+   # Store hash result into output_array[i]
+    sll $t7, $t0, 2                # $t7 = i * 4 (word offset for output_array)
+    add $t7, $a1, $t7              # $t7 = base + offset (address of output_array[i])
+   # sw $t6, 0($t7)                 # Store $t6 (hash result) into output_array[i]
+move $t6,$t7
+    # Print hash result
+    li $v0, 1                      # Print integer syscall
+    move $a0, $t6                  # Move hash result into $a0
+    syscall
+
+    # Print a newline
+    la $a0, newline                # Load address of newline character
+    li $v0, 4                      # syscall for print_string
+    syscall
+
+    # Increment index (i++)
+    addi $t0, $t0, 1     # $t1 = $t1 + 1
+    j loop               # Repeat loop
+
+end:
+    # Exit program
+    li $v0, 10           # syscall for exit
+    syscall            
+
+cslab_hash:
+    lw $t9, AddrConstant5381       # Load constant 5381 into $t9 (hash)
+ 
+LOOP:
+    beq $t3, $zero, END             # If input (t3) is 0, go to END
+    andi $t4, $t3, 0xFF            # c(t4) = input(t3) & 0xFF
+    sll $t5, $t9, 4                # t5 = left shift hash(t9) by 4 bits
+    add $t6, $t5, $t9              # hash = (hash << 4) + hash
+    add $t6, $t6, $t4              # hash = ((hash << 4) + hash) + c(t4)
+    srl $t3, $t3, 8                # update input (t3) by right shifting 8 bits
+    # Print the intermediate hash value for debugging
+    li $v0, 1                   # syscall for print_int
+    move $a0, $t6               # Intermediate hash value
+    syscall
+
+    # Print a newline
+    la $a0, newline             # Load address of newline character
+    li $v0, 4                   # syscall for print_string
+    syscall
+   
+  
+    j LOOP                         # Repeat the loop
+  
+END:
+       jr $ra                         # Return to the caller
+
+ 
