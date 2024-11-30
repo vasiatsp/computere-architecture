@@ -1,0 +1,121 @@
+.data
+ heap: .space 1024 
+ heap_prt: .word 0 
+ data: .word 0 #hold the allocated pointer 
+ 
+.text 
+main: 
+
+#malloc set up 
+li $a0, 32 #space for 32 bytes 
+jal malloc 
+sw $v0, data #store teh returned pointer in data
+move $s0, $v0 #store allocated point in s0
+
+malloc:
+li $t4, 1024
+la $t1, heap #base address of the heap
+lw $t2, heap_prt # load curr heap pointer
+add $t3, $t1, $t2 #calulate free address 
+add $t2, $t2, $a0 #t2 holds curr pointer (heap_ptr)
+		  # a0 is the num of bytes wanted for the allocation 
+		  # we give the wanted size to t2 and we get a new heap_ptr
+slt $t3, $t2, $t4 # check if new nead_prt(t2) < 1024 
+sw $t2, heap_prt #update heap prt
+move $v0, $t3 #return allocated memory
+beq $t3, $zero, END
+jr $ra 
+
+# data[0]'
+li $t1, 54              # '6'
+li $t2, 51              # '3'
+li $t3, 54              # '6'
+jal string_to_int          # Encode '636' into integer
+sw $t1, 0($s0)          # Store result at data[0]
+
+# data[1]
+li $t1, 78              # 'N'
+li $t2, 84              # 'T'
+li $t3, 85              # 'U'
+li $t4, 65              # 'A'
+jal string_to_int          # Encode 'NTUA' into integer
+sw $t1, 4($s0)          # Store result at data[1]
+
+# data[2]
+li $t1, 69              # 'E'
+li $t2, 67              # 'C'
+li $t3, 69              # 'E'
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode 'ECE' into integer
+sw $t1, 8($s0)          # Store result at data[2]
+
+# data[3]
+li $t1, 67              # 'C'
+li $t2, 65              # 'A'
+li $t3, 0               # Empty (no third character)
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode 'CA' into integer
+sw $t1, 12($s0)         # Store result at data[3]
+
+
+# data[4]
+li $t1, 50              # '2'
+li $t2, 48              # '0'
+li $t3, 50              # '2'
+li $t4, 52              # '4'
+jal string_to_int           # Encode '2024' into integer
+sw $t1, 16($s0)         # Store result at data[4]
+
+
+# data[5]
+li $t1, 49              # '1'
+li $t2, 50              # '2'
+li $t3, 49              # '1'
+li $t4, 48              # '0'
+jal string_to_int           # Encode '1210' into integer
+sw $t1, 20($s0)         # Store result at data[5]
+
+
+ # data[6]
+li $t1, 50              # '2'
+li $t2, 48              # '0'
+li $t3, 52              # '4'
+li $t4, 0               # Empty (no fourth character)
+jal string_to_int           # Encode '204' into integer
+sw $t1, 24($s0)         # Store result at data[6]
+
+
+ # data[7]
+li $t1, 77              # 'M'
+li $t2, 73              # 'I'
+li $t3, 80              # 'P'
+li $t4, 83              # 'S'
+jal string_to_int           # Encode 'MIPS' into integer
+sw $t1, 28($s0)         # Store result at data[7]
+
+#create leaves
+la $a1, data
+li $a2, 8 # 8 leaves
+move $a2, $s0 #pass tree ponter as a0
+jal create_leaves
+
+#create merkle treee 
+move $a0, $s0 #pas tree pointer as a0
+li $a1, 8 # 8 leaves
+jal create_Merkle_Tree
+move $t0, $v0 #moce root into t0
+
+END:
+jr $ra   
+
+string_to_int:
+sll $a0, $a0, 24        # Shift first char to the high byte
+sll $a1, $a1, 16        # Shift second char
+sll $a2, $a2, 8         # Shift third char
+or  $a0, $a0, $a1       # Combine chars into one integer
+or  $a0, $a0, $a2
+or  $a0, $a0, $a3       # Include the fourth char
+jr  $ra
+    
+    
+
